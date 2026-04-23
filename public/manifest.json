@@ -1,0 +1,15 @@
+{
+  "short_name": "RM Bike Point",
+  "name": "R.M Bike Point - Premium Motorcycle Service",
+  "icons": [
+    {
+      "src": "https://api.dicebear.com/7.x/initials/svg?seed=RM&backgroundColor=E11D48",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#E11D48",
+  "background_color": "#000000"
+}
