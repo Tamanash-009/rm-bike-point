@@ -1,0 +1,18 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(80, 200) skewX(-25)">
+    <!-- R -->
+    <path d="M 0,0 L 150,0 C 200,0 200,80 150,80 L 100,80 L 150,140 L 100,140 L 60,80 L 40,80 L 30,140 L -20,140 Z" fill="#FFFFFF" />
+    <!-- M -->
+    <path d="M 170,140 L 210,0 L 260,60 L 310,0 L 280,140 L 240,140 L 260,60 L 220,140 Z" fill="#FFFFFF" />
+    
+    <!-- Red Square (Now White for Monochrome) -->
+    <rect x="300" y="100" width="40" height="40" fill="#FFFFFF" />
+  </g>
+  
+  <g transform="translate(256, 420)" text-anchor="middle" font-family="'Inter', 'Segoe UI', Arial, sans-serif" font-weight="900" font-size="52" letter-spacing="14">
+    <text x="0">
+      <tspan fill="#FFFFFF">BIKE</tspan>
+      <tspan fill="#FFFFFF" dx="20">POINT</tspan>
+    </text>
+  </g>
+</svg>

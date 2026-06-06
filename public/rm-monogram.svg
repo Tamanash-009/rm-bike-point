@@ -1,0 +1,11 @@
+<svg width="380" height="180" viewBox="0 0 380 180" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(40, 20) skewX(-25)" stroke-linejoin="round">
+    <!-- R -->
+    <path d="M 0,0 L 150,0 C 200,0 200,80 150,80 L 100,80 L 150,140 L 100,140 L 60,80 L 40,80 L 30,140 L -20,140 Z" fill="#F5F5F5" stroke="#F5F5F5" stroke-width="6" />
+    <!-- M -->
+    <path d="M 170,140 L 210,0 L 260,60 L 310,0 L 280,140 L 240,140 L 260,60 L 220,140 Z" fill="#F5F5F5" stroke="#F5F5F5" stroke-width="6" />
+    
+    <!-- Red Accent Speed Mark -->
+    <path d="M 300,140 L 330,80 L 360,80 L 330,140 Z" fill="#FF3B30" />
+  </g>
+</svg>

@@ -1,0 +1,266 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "client"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Service": {
+      "title": "Service",
+      "description": "Motorcycle service offering",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "priceRange": { "type": "string" },
+        "category": { "type": "string" },
+        "imageUrl": { "type": "string" }
+      },
+      "required": ["name", "priceRange"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Spare part or accessory",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "brand": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "category": { "type": "string" },
+        "stock": { "type": "number" },
+        "imageUrl": { "type": "string" },
+        "bikeModels": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["name", "price", "stock"]
+    },
+    "Bike": {
+      "title": "Bike",
+      "description": "Second-hand bike listing",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "model": { "type": "string" },
+        "brand": { "type": "string" },
+        "year": { "type": "number" },
+        "price": { "type": "number" },
+        "kms": { "type": "number" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "status": { "type": "string", "enum": ["available", "sold"] }
+      },
+      "required": ["model", "brand", "price", "status"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "Service booking record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "bikeModel": { "type": "string" },
+        "serviceType": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "completed", "cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "bikeModel", "serviceType", "date", "status"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Product purchase record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "deliveryAddress": { "type": "string" },
+        "items": { "type": "array" },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "paid", "shipped", "delivered"] },
+        "paymentId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "items", "totalAmount", "status"]
+    },
+    "Query": {
+      "title": "Query",
+      "description": "Customer message or inquiry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "isImportant": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["new", "replied", "closed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "message", "status"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "User review and rating",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "targetId": { "type": "string" },
+        "targetType": { "type": "string", "enum": ["product", "service", "bike"] },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userPhoto": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["targetId", "targetType", "userId", "rating", "comment"]
+    },
+    "Mail": {
+      "title": "Mail",
+      "description": "Email record for Trigger Email extension",
+      "type": "object",
+      "properties": {
+        "to": { "type": "string" },
+        "message": {
+          "type": "object",
+          "properties": {
+            "subject": { "type": "string" },
+            "text": { "type": "string" },
+            "html": { "type": "string" }
+          }
+        }
+      },
+      "required": ["to", "message"]
+    },
+    "ChatRoom": {
+      "title": "ChatRoom",
+      "description": "Real-time support chat room",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userPhoto": { "type": "string" },
+        "lastMessage": { "type": "string" },
+        "lastMessageAt": { "type": "string", "format": "date-time" },
+        "unreadCount": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "closed"] }
+      },
+      "required": ["userId", "userName", "status"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Individual message in a chat room",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "isAdmin": { "type": "boolean" }
+      },
+      "required": ["senderId", "text", "createdAt"]
+    },
+    "LoyaltyTransaction": {
+      "title": "LoyaltyTransaction",
+      "description": "Record of loyalty points earned or redeemed",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "points": { "type": "number" },
+        "type": { "type": "string", "enum": ["earn", "redeem"] },
+        "reason": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "points", "type", "reason"]
+    },
+    "BlogPost": {
+      "title": "BlogPost",
+      "description": "A blog post entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "excerpt": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "category": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "imageUrl": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "published"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "authorId", "status"]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "A comment on a blog post",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "postId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userPhoto": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["postId", "userId", "text"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "User notification for updates",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["service", "order", "system"] },
+        "status": { "type": "string", "enum": ["unread", "read"] },
+        "link": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "message", "type", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "User", "description": "User profiles" },
+    "/services/{serviceId}": { "schema": "Service", "description": "Available services" },
+    "/products/{productId}": { "schema": "Product", "description": "Spare parts catalog" },
+    "/bikes/{bikeId}": { "schema": "Bike", "description": "Second-hand bike listings" },
+    "/bookings/{bookingId}": { "schema": "Booking", "description": "Service bookings" },
+    "/orders/{orderId}": { "schema": "Order", "description": "Product orders" },
+    "/queries/{queryId}": { "schema": "Query", "description": "Customer inquiries" },
+    "/reviews/{reviewId}": { "schema": "Review", "description": "Product and service reviews" },
+    "/mail/{mailId}": { "schema": "Mail", "description": "Emails to be sent by extension" },
+    "/chatRooms/{roomId}": { "schema": "ChatRoom", "description": "Support chat rooms" },
+    "/chatRooms/{roomId}/messages/{messageId}": { "schema": "ChatMessage", "description": "Chat messages" },
+    "/loyaltyTransactions/{transactionId}": { "schema": "LoyaltyTransaction", "description": "Loyalty point history" },
+    "/blogPosts/{postId}": { "schema": "BlogPost", "description": "Blog posts" },
+    "/blogPosts/{postId}/comments/{commentId}": { "schema": "Comment", "description": "Comments on blog posts" },
+    "/notifications/{notificationId}": { "schema": "Notification", "description": "User notifications" }
+  }
+}

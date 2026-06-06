@@ -1,0 +1,251 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Fields: uid, email, displayName, photoURL, role (admin/client), createdAt
+    //
+    // Collection: services
+    // Fields: id, name, description, priceRange, category, imageUrl
+    //
+    // Collection: products
+    // Fields: id, name, description, price, category, stock, imageUrl
+    //
+    // Collection: bikes
+    // Fields: id, model, brand, year, price, kms, description, imageUrl, status
+    //
+    // Collection: bookings
+    // Fields: id, userId, userName, userEmail, bikeModel, serviceType, date, status, createdAt
+    //
+    // Collection: orders
+    // Fields: id, userId, items, totalAmount, status, paymentId, createdAt
+    //
+    // Collection: queries
+    // Fields: id, name, email, phone, subject, message, isImportant, status, createdAt
+    //
+    // Collection: reviews
+    // Fields: id, targetId, targetType, userId, userName, userPhoto, rating, comment, createdAt
+    //
+    // Collection: mail
+    // Fields: to, message (subject, text, html)
+    //
+    // Collection: chatRooms
+    // Fields: userId, userName, userPhoto, lastMessage, lastMessageAt, unreadCount, status
+    //
+    // Collection: chatRooms/{roomId}/messages
+    // Fields: senderId, senderName, text, createdAt, isAdmin
+    //
+    // Collection: loyaltyTransactions
+    // Fields: id, userId, points, type, reason, createdAt
+    //
+    // Collection: blogPosts
+    // Fields: id, title, content, excerpt, authorId, authorName, category, tags, imageUrl, status, createdAt, updatedAt
+    //
+    // Collection: blogPosts/{postId}/comments
+    // Fields: id, postId, userId, userName, userPhoto, text, createdAt
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "chakrabortytamanash@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.role in ['admin', 'client'] &&
+             (!('phone' in data) || data.phone is string) &&
+             (!('address' in data) || data.address is string);
+    }
+
+    function isValidBooking(data) {
+      return data.keys().hasAll(['userId', 'bikeModel', 'serviceType', 'date', 'status']) &&
+             data.userId is string &&
+             data.bikeModel is string &&
+             data.serviceType is string &&
+             data.status in ['pending', 'confirmed', 'completed', 'cancelled'];
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll(['userId', 'items', 'totalAmount', 'status']) &&
+             data.userId is string &&
+             data.items is list &&
+             data.totalAmount is number &&
+             data.status in ['pending', 'paid', 'shipped', 'delivered', 'cancelled'] &&
+             (!('deliveryAddress' in data) || data.deliveryAddress is string) &&
+             (!('userName' in data) || data.userName is string) &&
+             (!('userEmail' in data) || data.userEmail is string);
+    }
+
+    function isValidQuery(data) {
+      return data.keys().hasAll(['name', 'email', 'message', 'status']) &&
+             data.name is string &&
+             data.email is string &&
+             data.message is string &&
+             data.status in ['new', 'replied', 'closed'];
+    }
+
+    function isValidReview(data) {
+      return data.keys().hasAll(['targetId', 'targetType', 'userId', 'rating', 'comment']) &&
+             data.targetId is string &&
+             data.targetType in ['product', 'service', 'bike'] &&
+             data.userId is string &&
+             data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+             data.comment is string && data.comment.size() <= 1000;
+    }
+
+    function isValidLoyaltyTransaction(data) {
+      return data.keys().hasAll(['userId', 'points', 'type', 'reason']) &&
+             data.userId is string &&
+             data.points is number &&
+             data.type in ['earn', 'redeem'] &&
+             data.reason is string;
+    }
+
+    function isValidBlogPost(data) {
+      return data.keys().hasAll(['title', 'content', 'authorId', 'status']) &&
+             data.title is string && data.title.size() <= 200 &&
+             data.content is string && data.content.size() <= 50000 &&
+             data.authorId is string &&
+             data.status in ['draft', 'published'];
+    }
+
+    function isValidComment(data) {
+      return data.keys().hasAll(['postId', 'userId', 'text']) &&
+             data.postId is string &&
+             data.userId is string &&
+             data.text is string && data.text.size() <= 2000;
+    }
+
+    function isValidNotification(data) {
+      return data.keys().hasAll(['userId', 'title', 'message', 'type', 'status']) &&
+             data.userId is string &&
+             data.title is string &&
+             data.message is string &&
+             data.type in ['service', 'order', 'system'] &&
+             data.status in ['unread', 'read'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) || isAdmin()) && 
+                    (request.resource.data.role == resource.data.role || isAdmin());
+    }
+
+    match /services/{serviceId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /bikes/{bikeId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAuthenticated() && isValidBooking(request.resource.data) && (request.auth.uid == request.resource.data.userId || isAdmin());
+      allow update: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin()) && isValidBooking(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAuthenticated() && isValidOrder(request.resource.data) && (request.auth.uid == request.resource.data.userId || isAdmin());
+      allow update: if isAdmin();
+    }
+
+    match /queries/{queryId} {
+      allow read: if isAdmin();
+      allow create: if isValidQuery(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidReview(request.resource.data) && request.auth.uid == request.resource.data.userId;
+      allow update: if isAuthenticated() && isOwner(resource.data.userId) && isValidReview(request.resource.data) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isAuthenticated() && (isOwner(resource.data.userId) || isAdmin());
+    }
+
+    match /mail/{mailId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /chatRooms/{roomId} {
+      allow read: if isAuthenticated() && (request.auth.uid == roomId || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == roomId;
+      allow update: if isAuthenticated() && (request.auth.uid == roomId || isAdmin());
+      
+      match /messages/{messageId} {
+        allow read: if isAuthenticated() && (request.auth.uid == roomId || isAdmin());
+        allow create: if isAuthenticated() && (request.auth.uid == roomId || isAdmin());
+      }
+    }
+
+    match /chatSessions/{sessionId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+
+      match /messages/{messageId} {
+        allow read: if isAuthenticated() && (get(/databases/$(database)/documents/chatSessions/$(sessionId)).data.userId == request.auth.uid || isAdmin());
+        allow create: if isAuthenticated() && (get(/databases/$(database)/documents/chatSessions/$(sessionId)).data.userId == request.auth.uid || isAdmin());
+      }
+    }
+
+    match /loyaltyTransactions/{transactionId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAuthenticated() && (request.auth.uid == request.resource.data.userId || isAdmin()) && isValidLoyaltyTransaction(request.resource.data);
+      allow update, delete: if false; // Transactions should be immutable
+    }
+
+    match /blogPosts/{postId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow write: if isAdmin() && isValidBlogPost(request.resource.data);
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isAuthenticated() && isValidComment(request.resource.data) && request.auth.uid == request.resource.data.userId;
+        allow update, delete: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      }
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAdmin() && isValidNotification(request.resource.data);
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.userId && 
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) &&
+                    request.resource.data.status in ['unread', 'read'];
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+  }
+}
