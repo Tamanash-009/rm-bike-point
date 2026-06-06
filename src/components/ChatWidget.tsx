@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageCircle, X, Send, User, Loader2, Phone, Trash2, Clock, Calendar, ArrowRight, ShoppingBag } from 'lucide-react';
-import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
-import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, updateDoc, setDoc, getDoc, deleteDoc, getDocs, writeBatch, where, limit } from '../lib/firebase';
+import { supabase } from '../lib/supabase';
 import { useUser } from '@clerk/clerk-react';
 import { toast } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
@@ -49,68 +48,79 @@ export default function ChatWidget() {
       localStorage.removeItem('rm_active_chat_session');
     } else {
       const savedSessionId = localStorage.getItem('rm_active_chat_session');
-      if (savedSessionId) {
-        setActiveSessionId(savedSessionId);
-      }
+      if (savedSessionId) setActiveSessionId(savedSessionId);
     }
   }, [user]);
 
   // Save active session to localStorage
   useEffect(() => {
-    if (activeSessionId) {
-      localStorage.setItem('rm_active_chat_session', activeSessionId);
-    } else {
-      localStorage.removeItem('rm_active_chat_session');
-    }
+    if (activeSessionId) localStorage.setItem('rm_active_chat_session', activeSessionId);
+    else localStorage.removeItem('rm_active_chat_session');
   }, [activeSessionId]);
+
+  // Auto-start a session when chat opens for the first time
+  useEffect(() => {
+    if (!isOpen || !user || activeSessionId) return;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('chatSessions').insert({
+          "userId": user.id,
+          "title": 'New Chat',
+          "lastMessage": 'Started',
+          "lastMessageAt": new Date().toISOString()
+        }).select().single();
+        if (error) throw error;
+        setActiveSessionId(data.id);
+        // Post greeting
+        const alreadyGreeted = localStorage.getItem(`greeted_${user.id}`);
+        if (!alreadyGreeted) {
+          await supabase.from('chatSessions_messages').insert({
+            "chatSessions_id": data.id,
+            "senderId": 'ai-assistant',
+            "senderName": 'RM Assistant',
+            "text": `Hello ${user.firstName || 'Rider'}! 🏍️ Welcome to R.M Bike Point. I can help with service bookings, spare parts, pricing, and more. What do you need today?`,
+            "isAdmin": true,
+            "isAI": true
+          });
+          localStorage.setItem(`greeted_${user.id}`, 'true');
+        }
+      } catch (err) {
+        console.error('Failed to start chat session:', err);
+      }
+    })();
+  }, [isOpen, user, activeSessionId]);
 
   // Fetch sessions for history drawer
   useEffect(() => {
     if (!user) return;
-    const q = query(
-      collection(db, 'chatSessions'),
-      where('userId', '==', user.id),
-      orderBy('lastMessageAt', 'desc')
-    );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setSessions(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as ChatSession)));
-    });
-    return () => unsubscribe();
-  }, [user]);
-
-  // Handle first-time greeting
-  useEffect(() => {
-    if (isOpen && messages.length === 0 && user && activeSessionId) {
-      const greeted = localStorage.getItem(`greeted_${user.uid}`);
-      if (!greeted) {
-        const greeting = "Hello! Welcome to R.M Bike Point 🚀 We provide premium motorcycle service, genuine spare parts, and performance upgrades. How can I assist you today?";
-        addDoc(collection(db, 'chatSessions_messages'), {
-          chatSessions_id: activeSessionId,
-          senderId: 'ai-assistant',
-          senderName: 'RM Assistant',
-          text: greeting,
-          createdAt: serverTimestamp(),
-          isAdmin: true,
-          isAI: true
-        }).then(() => {
-          localStorage.setItem(`greeted_${user.uid}`, 'true');
-        });
-      }
-    }
-  }, [isOpen, messages.length, user, activeSessionId]);
+    const fetchSessions = async () => {
+      const { data } = await supabase
+        .from('chatSessions')
+        .select('*')
+        .eq('userId', user.id)
+        .order('lastMessageAt', { ascending: false });
+      if (data) setSessions(data as ChatSession[]);
+    };
+    fetchSessions();
+    // Poll every 5 seconds when open
+    const interval = isOpen ? setInterval(fetchSessions, 5000) : null;
+    return () => { if (interval) clearInterval(interval); };
+  }, [user, isOpen]);
 
   // Fetch messages for active session
   useEffect(() => {
     if (!user || !activeSessionId || !isOpen) return;
-    const q = query(
-      collection(db, 'chatSessions_messages'),
-      where('chatSessions_id', '==', activeSessionId),
-      orderBy('createdAt', 'asc')
-    );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setMessages(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Message)));
-    });
-    return () => unsubscribe();
+    const fetchMessages = async () => {
+      const { data } = await supabase
+        .from('chatSessions_messages')
+        .select('*')
+        .eq('chatSessions_id', activeSessionId)
+        .order('created_at', { ascending: true });
+      if (data) setMessages(data as Message[]);
+    };
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 3000);
+    return () => clearInterval(interval);
   }, [activeSessionId, user, isOpen]);
 
   const scrollToBottom = () => {
@@ -125,17 +135,21 @@ export default function ChatWidget() {
     if (!user) return;
     setLoading(true);
     try {
-      const sessionRef = await addDoc(collection(db, 'chatSessions'), {
-        userId: user ? user.id : 'anonymous',
-        title: 'Support Session',
-        lastMessage: 'Starting...',
-        lastMessageAt: serverTimestamp(),
-        createdAt: serverTimestamp()
-      });
-      setActiveSessionId(sessionRef.id);
+      const { data, error } = await supabase.from('chatSessions').insert({
+        "userId": user.id,
+        "title": 'New Chat',
+        "lastMessage": 'Started',
+        "lastMessageAt": new Date().toISOString()
+      }).select().single();
+      if (error) throw error;
+      setActiveSessionId(data.id);
+      setMessages([]);
       setShowHistory(false);
+      // Remove greeting flag so it fires again for new session
+      localStorage.removeItem(`greeted_${user.id}`);
     } catch (error) {
-      toast.error("Failed to start new chat");
+      toast.error("Failed to start new chat. Check your connection.");
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -143,10 +157,16 @@ export default function ChatWidget() {
 
   const deleteSession = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (!confirm("Are you sure you want to delete this chat session?")) return;
+    if (!confirm("Delete this chat session?")) return;
     try {
-      await deleteDoc(doc(db, 'chatSessions', id));
-      if (activeSessionId === id) setActiveSessionId(null);
+      await supabase.from('chatSessions_messages').delete().eq('chatSessions_id', id);
+      await supabase.from('chatSessions').delete().eq('id', id);
+      if (activeSessionId === id) {
+        setActiveSessionId(null);
+        setMessages([]);
+        localStorage.removeItem('rm_active_chat_session');
+      }
+      setSessions(prev => prev.filter(s => s.id !== id));
       toast.success("Chat deleted");
     } catch (error) {
       toast.error("Failed to delete chat");
@@ -156,10 +176,14 @@ export default function ChatWidget() {
   const deleteAllHistory = async () => {
     if (!confirm("Delete ALL chat history? This cannot be undone.")) return;
     try {
-      const batch = writeBatch(db);
-      sessions.forEach(s => batch.delete(doc(db, 'chatSessions', s.id)));
-      await batch.commit();
+      for (const s of sessions) {
+        await supabase.from('chatSessions_messages').delete().eq('chatSessions_id', s.id);
+        await supabase.from('chatSessions').delete().eq('id', s.id);
+      }
       setActiveSessionId(null);
+      setMessages([]);
+      setSessions([]);
+      localStorage.removeItem('rm_active_chat_session');
       toast.success("All history cleared");
     } catch (error) {
       toast.error("Failed to clear history");
@@ -173,14 +197,14 @@ export default function ChatWidget() {
     let targetSessionId = activeSessionId;
     if (!targetSessionId) {
       setLoading(true);
-      const sessionRef = await addDoc(collection(db, 'chatSessions'), {
-        userId: user ? user.id : 'anonymous',
-        title: inputText.slice(0, 30) + (inputText.length > 30 ? '...' : ''),
-        lastMessage: inputText,
-        lastMessageAt: serverTimestamp(),
-        createdAt: serverTimestamp()
-      });
-      targetSessionId = sessionRef.id;
+      const { data: newSession, error } = await supabase.from('chatSessions').insert({
+        "userId": user.id,
+        "title": inputText.slice(0, 30) + (inputText.length > 30 ? '...' : ''),
+        "lastMessage": inputText,
+        "lastMessageAt": new Date().toISOString()
+      }).select().single();
+      if (error || !newSession) { toast.error('Cannot start chat'); setLoading(false); return; }
+      targetSessionId = newSession.id;
       setActiveSessionId(targetSessionId);
     }
 
@@ -189,61 +213,66 @@ export default function ChatWidget() {
     setLoading(true);
 
     try {
-      // Add user message
-      await addDoc(collection(db, 'chatSessions_messages'), {
-        chatSessions_id: targetSessionId,
-        senderId: user.id,
-        senderName: user.fullName || 'User',
-        text,
-        createdAt: serverTimestamp(),
-        isAdmin: false
+      // Save user message
+      await supabase.from('chatSessions_messages').insert({
+        "chatSessions_id": targetSessionId,
+        "senderId": user.id,
+        "senderName": user.fullName || user.firstName || 'User',
+        "text": text,
+        "isAdmin": false,
+        "isAI": false
       });
 
-      // Update session title if first message
-      if (messages.length === 0) {
-        await updateDoc(doc(db, 'chatSessions', targetSessionId), {
-          title: text.substring(0, 30) + (text.length > 30 ? '...' : '')
-        });
-      }
+      // Optimistically show user message
+      setMessages(prev => [...prev, {
+        id: `temp-${Date.now()}`,
+        senderId: user.id,
+        senderName: user.fullName || 'You',
+        text,
+        createdAt: null,
+        isAdmin: false,
+        isAI: false
+      }]);
 
-      // Prepare history
-      const historyItems = messages.map(m => ({
+      // Prepare history for AI
+      const historyItems = messages.slice(-10).map(m => ({
         role: m.isAdmin ? 'model' : 'user' as 'user' | 'model',
         parts: [{ text: m.text }]
-      })).slice(-10);
+      }));
 
-      // Call Backend
+      // Call AI backend
       const token = await window.Clerk?.session?.getToken();
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({ message: text, history: historyItems })
       });
 
       const data = await res.json();
-      const aiResponse = data.reply;
+      const aiResponse = data.reply || "Sorry, I couldn't process that. Please try WhatsApp: https://wa.me/916289328280";
 
-      // Add AI message
-      await addDoc(collection(db, 'chatSessions_messages'), {
-        chatSessions_id: targetSessionId,
-        senderId: 'ai-assistant',
-        senderName: 'RM Assistant',
-        text: aiResponse,
-        createdAt: serverTimestamp(),
-        isAdmin: true,
-        isAI: true
+      // Save AI response
+      await supabase.from('chatSessions_messages').insert({
+        "chatSessions_id": targetSessionId,
+        "senderId": 'ai-assistant',
+        "senderName": 'RM Assistant',
+        "text": aiResponse,
+        "isAdmin": true,
+        "isAI": true
       });
 
-      // Update session
-      await updateDoc(doc(db, 'chatSessions', targetSessionId), {
-        lastMessage: aiResponse.substring(0, 100),
-        lastMessageAt: serverTimestamp(),
-      });
+      // Update session last message
+      await supabase.from('chatSessions').update({
+        "lastMessage": aiResponse.substring(0, 100),
+        "lastMessageAt": new Date().toISOString(),
+        "title": messages.length === 0 ? text.substring(0, 30) : undefined
+      }).eq('id', targetSessionId);
 
     } catch (error) {
+      console.error('Chat error:', error);
       toast.error("AI Assistant unavailable. Try WhatsApp.");
     } finally {
       setLoading(false);
