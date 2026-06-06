@@ -13,8 +13,6 @@ export default function PWAInstallBanner() {
 
   useEffect(() => {
     if (isInstalled) return;
-    const dismissed = localStorage.getItem(STORAGE_KEY);
-    if (dismissed) return;
 
     if (isInstallable) {
       const t = setTimeout(() => setVisible(true), SHOW_DELAY_MS);

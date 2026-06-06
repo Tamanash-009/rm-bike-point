@@ -8,6 +8,17 @@ import { Plus, Trash2, Edit2, X, Upload, Package, Bike } from 'lucide-react';
 import { formatPrice, cn } from '../lib/utils';
 import { BIKE_BRANDS, ALL_MODELS, SPARE_PART_CATEGORIES } from '../constants/bikeData';
 import { Skeleton, ProductSkeleton } from './Skeleton';
+import * as xlsx from 'xlsx';
+import { v4 as uuidv4 } from 'uuid';
+
+const generateSlug = (text: string) => {
+  return text.toString().toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
+};
 
 interface Listing {
   id: string;
@@ -41,6 +52,7 @@ export default function AdminListings() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingListing, setEditingListing] = useState<Listing | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState<Partial<Listing>>({
@@ -50,6 +62,89 @@ export default function AdminListings() {
     images: [],
     transmission: 'Manual'
   });
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setImporting(true);
+    const toastId = toast.loading('Reading Excel file...');
+    
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = xlsx.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const rawData = xlsx.utils.sheet_to_json(worksheet);
+      
+      const { supabase: sb } = await import('../lib/supabase');
+      let products = [];
+      const seen = new Set();
+      
+      for (const row of rawData as any[]) {
+        const getVal = (possibleKeys: string[]) => {
+          for (const k of possibleKeys) {
+            for (const rk of Object.keys(row)) {
+              if (rk.toLowerCase().includes(k.toLowerCase())) return row[rk];
+            }
+          }
+          return null;
+        };
+        
+        const name = getVal(['name', 'product', 'item', 'description']) || 'Unknown Part';
+        if (seen.has(name)) continue;
+        seen.add(name);
+        
+        const manufacturer = getVal(['brand', 'manufacturer', 'make']) || 'Generic';
+        const part_number = getVal(['part', 'number', 'sku']) || `PN-${uuidv4().substring(0,6).toUpperCase()}`;
+        const priceStr = getVal(['price', 'mrp', 'rate']) || '0';
+        let price = parseFloat(priceStr.toString().replace(/[^\d.]/g, ''));
+        if (isNaN(price)) price = 0;
+        
+        let quantityStr = getVal(['qty', 'quantity', 'stock']) || '1';
+        let quantity = parseInt(quantityStr.toString().replace(/[^\d]/g, ''));
+        if (isNaN(quantity)) quantity = 1;
+        
+        const compatible_models = getVal(['compatible', 'model', 'bike']) ? getVal(['compatible', 'model', 'bike']).toString().split(',') : [];
+        
+        const desc = getVal(['desc', 'details']) || `Genuine ${manufacturer} ${name}.`;
+        const full_description = `${desc}
+Part Number: ${part_number}
+Compatible Models: ${compatible_models.join(', ')}
+Year: ${getVal(['year']) || 'Any'}
+BS Stage: ${getVal(['bs', 'stage']) || 'BS6'}`;
+
+        products.push({
+          id: uuidv4(),
+          name: name,
+          price: price,
+          category: 'Spare Parts',
+          description: full_description,
+          image_url: 'https://images.unsplash.com/photo-1600661653561-629509216228?w=800&q=80',
+          brand: manufacturer,
+          in_stock: quantity > 0,
+          created_at: new Date().toISOString()
+        });
+      }
+      
+      toast.loading(`Uploading ${products.length} unique products...`, { id: toastId });
+      
+      const chunkSize = 50;
+      for (let i = 0; i < products.length; i += chunkSize) {
+        const chunk = products.slice(i, i + chunkSize);
+        const { error } = await sb.from('products').upsert(chunk);
+        if (error) throw error;
+      }
+      
+      toast.success(`Successfully imported ${products.length} products!`, { id: toastId });
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Import failed: ${err.message}`, { id: toastId });
+    } finally {
+      setImporting(false);
+      if (e.target) e.target.value = '';
+    }
+  };
 
   useEffect(() => {
     const qProducts = collection(db, 'products');
@@ -201,19 +296,38 @@ export default function AdminListings() {
           ))}
         </div>
 
-        <button 
-          onClick={() => {
-            setEditingListing(null);
-            setFormData({ type: 'product', category: 'Accessories', status: 'available', images: [] });
-            setIsModalOpen(true);
-          }}
-          className="bg-brand-orange hover:bg-brand-orange-dark text-white px-8 py-4 rounded-[1.5rem] font-black text-xs uppercase tracking-widest flex items-center gap-4 transition-all shadow-xl shadow-brand-orange/10 transform hover:-translate-y-0.5 active:scale-95"
-        >
-          <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
-            <Plus className="w-4 h-4" />
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={handleFileUpload}
+              disabled={importing}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+            />
+            <button 
+              disabled={importing}
+              className="bg-card-bg border border-text-primary/10 hover:border-brand-orange/50 text-white px-6 py-4 rounded-[1.5rem] font-black text-xs uppercase tracking-widest flex items-center gap-3 transition-all active:scale-95 disabled:opacity-50"
+            >
+              <Upload className="w-4 h-4" />
+              <span>{importing ? 'Importing...' : 'Bulk Import Excel'}</span>
+            </button>
           </div>
-          <span>Create Listing</span>
-        </button>
+
+          <button 
+            onClick={() => {
+              setEditingListing(null);
+              setFormData({ type: 'product', category: 'Accessories', status: 'available', images: [] });
+              setIsModalOpen(true);
+            }}
+            className="bg-brand-orange hover:bg-brand-orange-dark text-white px-8 py-4 rounded-[1.5rem] font-black text-xs uppercase tracking-widest flex items-center gap-4 transition-all shadow-xl shadow-brand-orange/10 transform hover:-translate-y-0.5 active:scale-95"
+          >
+            <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
+              <Plus className="w-4 h-4" />
+            </div>
+            <span>Create Listing</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
