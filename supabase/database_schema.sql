@@ -113,3 +113,13 @@ ALTER TABLE public."chatSessions" DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public."chatSessions_messages" DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public."loyalty_points" DISABLE ROW LEVEL SECURITY;
+
+-- 8. AI USAGE TABLE (Rate limiting: 1 message per user per day)
+CREATE TABLE IF NOT EXISTS public.ai_usage (
+    "id"           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "userId"       TEXT NOT NULL,
+    "date"         TEXT NOT NULL,        -- Format: YYYY-MM-DD
+    "messageCount" INTEGER DEFAULT 0,
+    UNIQUE ("userId", "date")
+);
+ALTER TABLE public.ai_usage DISABLE ROW LEVEL SECURITY;

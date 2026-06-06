@@ -53,7 +53,21 @@ app.post("/api/chat", requireAuth(), async (req, res) => {
   }
 
   try {
-    // No usage limit — open for all authenticated users
+    const today = new Date().toISOString().split('T')[0];
+
+    // Rate limit: 1 AI message per user per day
+    const { data: usageDoc } = await supabase
+      .from('ai_usage')
+      .select('*')
+      .eq('userId', userId)
+      .eq('date', today)
+      .maybeSingle();
+
+    if (usageDoc && usageDoc.messageCount >= 1) {
+      return res.json({ 
+        reply: "⚠️ You've used your free AI chat for today. Come back tomorrow for another session! In the meantime, reach us on WhatsApp: https://wa.me/916289328280" 
+      });
+    }
 
     const searchProductsTool = {
       functionDeclarations: [
@@ -143,6 +157,16 @@ app.post("/api/chat", requireAuth(), async (req, res) => {
     }
 
     const text = finalResponse.text || "I'm sorry, I couldn't process that. Please try again.";
+
+    // Track usage — 1 message per user per day
+    if (usageDoc) {
+      await supabase.from('ai_usage')
+        .update({ messageCount: usageDoc.messageCount + 1 })
+        .eq('id', usageDoc.id);
+    } else {
+      await supabase.from('ai_usage')
+        .insert([{ userId, date: today, messageCount: 1 }]);
+    }
 
     res.json({ reply: text });
   } catch (error) {
