@@ -10,7 +10,6 @@ import { db } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp, query, limit, getDocs } from '../lib/firebase';
 import { awardPoints, redeemPoints, getUserPoints, LOYALTY_RULES } from '../services/loyaltyService';
 import { Skeleton, ProductSkeleton } from '../components/Skeleton';
-import OrderSuccessAnimation from '../components/animations/OrderSuccessAnimation';
 
 export default function Cart() {
   const { items, removeItem, updateQuantity, clearCart, total } = useCartStore();
@@ -22,7 +21,6 @@ export default function Cart() {
   const [userAddress, setUserAddress] = useState('');
   const [popularProducts, setPopularProducts] = useState<any[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(true);
-  const [orderSuccessId, setOrderSuccessId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -102,7 +100,7 @@ export default function Cart() {
         createdAt: serverTimestamp()
       };
 
-      const docRef = await addDoc(collection(db, 'orders'), orderData);
+      await addDoc(collection(db, 'orders'), orderData);
       
       if (pointsToRedeem > 0) {
         await redeemPoints(user.id, pointsToRedeem, discountAmount, 'Order Discount');
@@ -113,13 +111,9 @@ export default function Cart() {
         await awardPoints(user.id, pointsEarned, `Order #${user.id.slice(-4)}`);
       }
 
+      toast.success(`Order placed! You earned ${pointsEarned} points.`);
       clearCart();
-      setOrderSuccessId(docRef.id);
-      
-      // Navigate to profile after 4 seconds to let animation finish
-      setTimeout(() => {
-        navigate('/profile');
-      }, 4000);
+      navigate('/profile');
     } catch (error) {
       console.error("Checkout error:", error);
       toast.error("Failed to place order. Please try again.");
@@ -127,14 +121,6 @@ export default function Cart() {
       setLoading(false);
     }
   };
-
-  if (orderSuccessId) {
-    return (
-      <div className="min-h-screen bg-bg-primary pt-20">
-        <OrderSuccessAnimation orderId={orderSuccessId} />
-      </div>
-    );
-  }
 
   if (items.length === 0) {
     return (

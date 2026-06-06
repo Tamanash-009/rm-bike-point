@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import RMBikeAnimation from './animations/RMBikeAnimation';
 
 export default function SplashScreen({ onAnimationComplete }: { onAnimationComplete?: () => void }) {
   return (
@@ -22,19 +21,34 @@ export default function SplashScreen({ onAnimationComplete }: { onAnimationCompl
 
       {/* The actual approved RM Bike Point icon */}
       <motion.div
-        className="relative flex flex-col items-center"
+        className="relative"
         initial={{ opacity: 0, scale: 0.7, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.15, ease: [0.19, 1, 0.22, 1] }}
       >
-        {/* The New Premium Bike Animation */}
+        {/* Icon image — exact approved artwork */}
+        <motion.img
+          src="/icon-512.png"
+          alt="RM Bike Point"
+          className="w-[42vw] md:w-[22vw] max-w-[260px] min-w-[160px] rounded-[22%] shadow-2xl"
+          animate={{ scale: [1, 1.04, 1] }}
+          transition={{ duration: 1.8, delay: 1.0, ease: [0.19, 1, 0.22, 1] }}
+        />
+
+        {/* Metallic shine sweep over the icon */}
         <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mb-8"
+          className="absolute inset-0 rounded-[22%] overflow-hidden pointer-events-none"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7, duration: 0.1 }}
         >
-          <RMBikeAnimation state="loading" size="xl" />
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+            style={{ skewX: -20 }}
+            initial={{ x: '-150%' }}
+            animate={{ x: '250%' }}
+            transition={{ duration: 0.65, delay: 0.75, ease: 'easeInOut' }}
+          />
         </motion.div>
 
         {/* Red accent glow ring */}
