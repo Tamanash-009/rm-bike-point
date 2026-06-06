@@ -11,6 +11,7 @@ let deferredPrompt: BeforeInstallPromptEvent | null = null;
 export function usePWAInstall() {
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
     // Check if already installed
@@ -19,6 +20,11 @@ export function usePWAInstall() {
       (window.navigator as any).standalone === true;
     setIsInstalled(installed);
     if (installed) return;
+
+    // Detect iOS
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
+    setIsIOS(isIosDevice);
 
     // If we already captured a prompt earlier, use it
     if (deferredPrompt) {
@@ -43,7 +49,12 @@ export function usePWAInstall() {
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
-  const triggerInstall = async (): Promise<'accepted' | 'dismissed' | 'unavailable'> => {
+  const triggerInstall = async (): Promise<'accepted' | 'dismissed' | 'unavailable' | 'ios_instructions'> => {
+    if (isIOS) {
+      // iOS doesn't support programmatic install, so we return a flag
+      // telling the UI to show instructions instead of triggering native prompt.
+      return 'ios_instructions';
+    }
     if (!deferredPrompt) return 'unavailable';
     await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
@@ -52,5 +63,5 @@ export function usePWAInstall() {
     return outcome;
   };
 
-  return { isInstallable, isInstalled, triggerInstall };
+  return { isInstallable, isInstalled, isIOS, triggerInstall };
 }
