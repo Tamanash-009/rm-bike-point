@@ -34,25 +34,15 @@ export default function Bikes() {
   const [selectedBrand, setSelectedBrand] = useState('All');
   const { addItem: addWishlistItem, removeItem: removeWishlistItem, isInWishlist } = useWishlistStore();
 
-  const mockBikes: Bike[] = [
-    { id: '1', model: 'Interceptor 650', brand: 'Royal Enfield', year: 2022, price: 285000, kms: 4500, description: 'Mint condition, single owner, all service records available.', imageUrl: 'https://images.unsplash.com/photo-1615172282427-9a374635678b?q=80&w=800&auto=format&fit=crop', status: 'available' },
-    { id: '2', model: 'Duke 390', brand: 'KTM', year: 2021, price: 210000, kms: 12000, description: 'Well maintained, new tires, performance exhaust.', imageUrl: 'https://images.unsplash.com/photo-1558981424-86a2f1d2a138?q=80&w=800&auto=format&fit=crop', status: 'available' },
-    { id: '3', model: 'MT-15', brand: 'Yamaha', year: 2023, price: 155000, kms: 2000, description: 'Almost new, first service done, no scratches.', imageUrl: 'https://images.unsplash.com/photo-1558981285-6f0c94958bb6?q=80&w=800&auto=format&fit=crop', status: 'available' },
-  ];
-
   useEffect(() => {
     const fetchBikes = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'bikes'));
         const fetchedBikes = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Bike));
-        if (fetchedBikes.length > 0) {
-          setBikes(fetchedBikes);
-        } else {
-          setBikes(mockBikes);
-        }
+        setBikes(fetchedBikes);
       } catch (error) {
         console.error('Error fetching bikes:', error);
-        setBikes(mockBikes);
+        setBikes([]);
       } finally {
         setLoading(false);
       }
@@ -139,6 +129,12 @@ export default function Bikes() {
           {[1, 2].map((i) => (
             <div key={i} className="h-[500px] bg-white/5 animate-pulse rounded-[3rem]" />
           ))}
+        </div>
+      ) : filteredBikes.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 bg-card-bg rounded-[3rem] border border-text-primary/5 border-dashed">
+          <BikeIcon className="w-16 h-16 text-gray-600 mb-6" />
+          <h3 className="text-2xl font-bold text-white mb-2">No Bikes Available</h3>
+          <p className="text-gray-500 max-w-md text-center">Currently, there are no pre-owned bikes available in our inventory. Please check back later or contact us for specific requirements.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
