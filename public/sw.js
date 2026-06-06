@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rm-bike-point-v2';
+const CACHE_NAME = 'rm-bike-point-v3';
 const urlsToCache = [
   '/',
   '/index.html',
