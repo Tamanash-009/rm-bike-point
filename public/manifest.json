@@ -4,10 +4,28 @@
   "description": "Premium motorcycle service, genuine spare parts, and performance upgrades in Kolkata.",
   "icons": [
     {
+      "src": "favicon-16.png",
+      "type": "image/png",
+      "sizes": "16x16",
+      "purpose": "any"
+    },
+    {
+      "src": "favicon-48.png",
+      "type": "image/png",
+      "sizes": "48x48",
+      "purpose": "any"
+    },
+    {
       "src": "icon-192.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any"
+    },
+    {
+      "src": "maskable-icon.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
     },
     {
       "src": "icon-512.png",
@@ -22,15 +40,15 @@
       "purpose": "maskable"
     },
     {
-      "src": "apple-touch-icon.png",
+      "src": "icon-1024.png",
       "type": "image/png",
-      "sizes": "180x180",
+      "sizes": "1024x1024",
       "purpose": "any"
     },
     {
-      "src": "rm-app-icon.svg",
-      "type": "image/svg+xml",
-      "sizes": "any",
+      "src": "apple-touch-icon.png",
+      "type": "image/png",
+      "sizes": "180x180",
       "purpose": "any"
     }
   ],
@@ -40,5 +58,7 @@
   "theme_color": "#0D0D0D",
   "background_color": "#0D0D0D",
   "categories": ["automotive", "shopping"],
-  "scope": "/"
+  "scope": "/",
+  "id": "/",
+  "prefer_related_applications": false
 }
