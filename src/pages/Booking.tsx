@@ -82,30 +82,25 @@ export default function Booking() {
         nextServiceDate = currentServiceDate.toISOString().split('T')[0];
       }
 
-      // Use direct Supabase insert with exact column names from schema
-      const { supabase: sb } = await import('../lib/supabase');
-      const { data: inserted, error } = await sb.from('bookings').insert({
-        "userId": user.id,
-        "userName": user.fullName || user.firstName || 'User',
-        "userEmail": user.primaryEmailAddress?.emailAddress || '',
-        "bikeModel": formData.bikeModel,
-        "serviceType": formData.serviceType,
-        "phone": formData.phone,
-        "date": formData.date,
-        "time": formData.time,
-        "notes": formData.notes || '',
-        "serviceInterval": formData.serviceInterval,
-        "status": 'pending',
-        "pointsRedeemed": pointsToRedeem,
-        "discountAmount": discountAmount,
-        "nextServiceDate": nextServiceDate,
-        "reminderSent": false
-      }).select().single();
-
-      if (error) {
-        console.error('Supabase booking error:', error);
-        throw new Error(error.message);
-      }
+      // Use direct Firebase insert
+      const docRef = await addDoc(collection(db, 'bookings'), {
+        userId: user.id,
+        userName: user.fullName || user.firstName || 'User',
+        userEmail: user.primaryEmailAddress?.emailAddress || '',
+        bikeModel: formData.bikeModel,
+        serviceType: formData.serviceType,
+        phone: formData.phone,
+        date: formData.date,
+        time: formData.time,
+        notes: formData.notes || '',
+        serviceInterval: formData.serviceInterval,
+        status: 'pending',
+        pointsRedeemed: pointsToRedeem,
+        discountAmount: discountAmount,
+        nextServiceDate: nextServiceDate,
+        reminderSent: false,
+        createdAt: serverTimestamp()
+      });
 
       if (pointsToRedeem > 0) {
         await redeemPoints(user.id, pointsToRedeem, discountAmount, `Service Discount: ${formData.serviceType}`);

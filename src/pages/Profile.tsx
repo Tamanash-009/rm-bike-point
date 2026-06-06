@@ -206,16 +206,13 @@ export default function Profile() {
         console.warn('Clerk user update skipped:', clerkErr);
       }
 
-      // Direct Supabase upsert with exact quoted column names
-      const { supabase: sb } = await import('../lib/supabase');
-      const { error } = await sb.from('users').upsert({
-        "id": user.id,
-        "displayName": displayName,
-        "phone": phone,
-        "address": address
-      });
-
-      if (error) throw error;
+      // Update Firestore
+      await setDoc(doc(db, 'users', user.id), {
+        displayName,
+        phone,
+        address,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
       toast.success('Profile updated successfully!');
     } catch (error: any) {
       console.error('Profile update error:', error);
