@@ -30,14 +30,14 @@ export default function SplashScreen({ onAnimationComplete }: { onAnimationCompl
         <motion.img
           src="/rm-app-icon-source.png"
           alt="RM Bike Point"
-          className="w-[42vw] md:w-[22vw] max-w-[260px] min-w-[160px] rounded-[22%] shadow-2xl"
+          className="w-[42vw] md:w-[22vw] max-w-[260px] min-w-[160px] rounded-3xl shadow-2xl"
           animate={{ scale: [1, 1.04, 1] }}
           transition={{ duration: 1.8, delay: 1.0, ease: [0.19, 1, 0.22, 1] }}
         />
 
         {/* Metallic shine sweep over the icon */}
         <motion.div
-          className="absolute inset-0 rounded-[22%] overflow-hidden pointer-events-none"
+          className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7, duration: 0.1 }}
