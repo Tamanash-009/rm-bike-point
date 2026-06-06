@@ -4,17 +4,11 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const SOURCE = 'C:/Users/chakr/.gemini/antigravity-ide/brain/69f53b83-6d90-47ba-9e38-2dd31b9af0d2/media__1780706101543.jpg';
+const SOURCE = path.join(__dirname, 'public', 'rm-app-icon-source.png');
 const PUBLIC = path.join(__dirname, 'public');
 
-// The source image is 1024×1024 with ~9% outer dark margin
-// Extract the core icon square
 async function getIconBuffer() {
-  const meta = await sharp(SOURCE).metadata();
-  const w = meta.width;
-  const margin = Math.round(w * 0.085); // ~8.5% outer dark bg
-  const size = w - margin * 2;
-  return sharp(SOURCE).extract({ left: margin, top: margin, width: size, height: size }).toBuffer();
+  return sharp(SOURCE).toBuffer();
 }
 
 async function generate() {
