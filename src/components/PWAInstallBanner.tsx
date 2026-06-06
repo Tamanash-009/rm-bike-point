@@ -67,7 +67,7 @@ export default function PWAInstallBanner() {
                   <div className="flex items-center gap-4">
                     {/* App icon */}
                     <img
-                      src="/icon-512.png"
+                      src="/rm-app-icon-source.png"
                       alt="RM Bike Point"
                       className="w-16 h-16 rounded-2xl object-cover shadow-lg shadow-black/50 flex-shrink-0"
                     />

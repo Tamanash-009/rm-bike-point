@@ -28,7 +28,7 @@ export default function SplashScreen({ onAnimationComplete }: { onAnimationCompl
       >
         {/* Icon image — exact approved artwork */}
         <motion.img
-          src="/icon-512.png"
+          src="/rm-app-icon-source.png"
           alt="RM Bike Point"
           className="w-[42vw] md:w-[22vw] max-w-[260px] min-w-[160px] rounded-[22%] shadow-2xl"
           animate={{ scale: [1, 1.04, 1] }}
