@@ -4,52 +4,28 @@
   "description": "Premium motorcycle service, genuine spare parts, and performance upgrades in Kolkata.",
   "icons": [
     {
-      "src": "favicon-16.png",
-      "type": "image/png",
-      "sizes": "16x16",
-      "purpose": "any"
-    },
-    {
-      "src": "favicon-48.png",
-      "type": "image/png",
-      "sizes": "48x48",
-      "purpose": "any"
-    },
-    {
       "src": "icon-192.png",
       "type": "image/png",
       "sizes": "192x192",
-      "purpose": "any"
-    },
-    {
-      "src": "maskable-icon.png",
-      "type": "image/png",
-      "sizes": "192x192",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     },
     {
       "src": "icon-512.png",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "maskable-icon.png",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     },
     {
-      "src": "icon-1024.png",
+      "src": "monochrome-icon.png",
       "type": "image/png",
-      "sizes": "1024x1024",
-      "purpose": "any"
-    },
-    {
-      "src": "apple-touch-icon.png",
-      "type": "image/png",
-      "sizes": "180x180",
-      "purpose": "any"
+      "sizes": "512x512",
+      "purpose": "monochrome"
     }
   ],
   "start_url": "/",
