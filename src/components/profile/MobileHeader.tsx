@@ -15,11 +15,12 @@ export default function MobileHeader({ theme, toggleTheme }: MobileHeaderProps) 
     <nav className="fixed top-0 left-0 right-0 z-[110] bg-bg-primary/80 backdrop-blur-2xl border-b border-text-primary/5 py-3 px-6 lg:hidden">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         {/* Left: Logo */}
-        <Link to="/" className="flex items-center active:scale-95 transition-transform" aria-label="RM Bike Point Home">
-          {/* Desktop: full brand logo */}
-          <img src="/rm-brand-logo.svg" alt="RM Bike Point" className="hidden sm:block h-10 w-auto object-contain" />
-          {/* Mobile: icon only */}
-          <img src="/rm-app-icon.svg" alt="RM" className="sm:hidden h-9 w-9 object-contain rounded-xl" />
+        <Link to="/" className="flex items-center gap-2 active:scale-95 transition-transform" aria-label="RM Bike Point Home">
+          <img src="/icon-512.png" alt="RM Bike Point" className="h-9 w-9 rounded-xl object-cover" />
+          <span className="hidden sm:flex flex-col leading-tight">
+            <span className="text-sm font-black italic tracking-wider text-white uppercase">RM</span>
+            <span className="text-[9px] font-bold tracking-[0.2em] text-[#FF3B30] uppercase">Bike Point</span>
+          </span>
         </Link>
 
         {/* Right: Actions */}

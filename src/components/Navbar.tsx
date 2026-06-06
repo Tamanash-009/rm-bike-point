@@ -40,23 +40,23 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center group" aria-label="RM Bike Point Home">
+            <Link to="/" className="flex items-center gap-3 group" aria-label="RM Bike Point Home">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-3"
               >
-                {/* Desktop: full brand logo */}
+                {/* Approved RM icon */}
                 <img
-                  src="/rm-brand-logo.svg"
+                  src="/icon-512.png"
                   alt="RM Bike Point"
-                  className="hidden sm:block h-12 w-auto object-contain"
+                  className="h-10 w-10 rounded-xl object-cover shadow-lg"
                 />
-                {/* Mobile: icon only */}
-                <img
-                  src="/rm-app-icon.svg"
-                  alt="RM Bike Point"
-                  className="sm:hidden h-10 w-10 object-contain rounded-xl"
-                />
+                {/* Brand name - desktop only */}
+                <span className="hidden sm:flex flex-col leading-tight">
+                  <span className="text-base font-black italic tracking-wider text-white uppercase">RM</span>
+                  <span className="text-[10px] font-bold tracking-[0.2em] text-[#FF3B30] uppercase">Bike Point</span>
+                </span>
               </motion.div>
             </Link>
           </div>

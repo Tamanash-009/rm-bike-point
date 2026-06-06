@@ -11,7 +11,7 @@ export default function Auth() {
       <div className="relative z-10 w-full max-w-md flex flex-col items-center">
         <div className="text-center mb-10">
           <div className="mx-auto mb-6 flex items-center justify-center">
-            <img src="/rm-app-icon.svg" alt="RM Bike Point" className="w-20 h-20 rounded-3xl shadow-2xl shadow-brand-orange/20" />
+            <img src="/icon-512.png" alt="RM Bike Point" className="w-20 h-20 rounded-2xl shadow-2xl shadow-brand-orange/20" />
           </div>
           <h1 className="text-4xl font-black italic uppercase tracking-tighter mb-2 text-text-primary">
             Authenticate
