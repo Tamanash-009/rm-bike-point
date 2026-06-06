@@ -76,14 +76,12 @@ export default function MobileDrawer({ isOpen, onClose, cartCount }: MobileDrawe
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="absolute top-0 left-0 w-[85%] h-full bg-bg-primary border-r border-text-primary/5 flex flex-col"
           >
-            {/* Header */}
             <div className="p-8 pb-4 flex items-center justify-between">
-              <Link to="/" onClick={onClose} className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-brand-orange rounded-xl flex items-center justify-center shadow-lg shadow-brand-orange/20">
-                  <span className="text-black font-black italic text-xl">R</span>
-                </div>
-                <span className="text-lg font-black tracking-tighter text-white uppercase italic">
-                  Bike <span className="text-brand-orange">Point</span>
+              <Link to="/" onClick={onClose} className="flex items-center gap-3">
+                <img src="/icon-512.png" alt="RM Bike Point" className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-black/40" />
+                <span className="flex flex-col leading-tight">
+                  <span className="text-base font-black italic tracking-wider text-white uppercase">RM</span>
+                  <span className="text-[10px] font-bold tracking-[0.2em] text-[#FF3B30] uppercase">Bike Point</span>
                 </span>
               </Link>
               <button 

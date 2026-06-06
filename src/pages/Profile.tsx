@@ -201,21 +201,25 @@ export default function Profile() {
     setSaving(true);
     try {
       try {
-        await user.update({ firstName: displayName });
+        await user.update({ firstName: displayName.split(' ')[0], lastName: displayName.split(' ').slice(1).join(' ') || undefined });
       } catch (clerkErr) {
-        console.warn('Clerk user update failed, continuing with DB update:', clerkErr);
+        console.warn('Clerk user update skipped:', clerkErr);
       }
-      
-      await setDoc(doc(db, 'users', user.id), {
-        displayName,
-        phone,
-        address
-      }, { merge: true });
-      toast.success('Profile updated successfully');
-    } catch (error) {
+
+      // Direct Supabase upsert with exact quoted column names
+      const { supabase: sb } = await import('../lib/supabase');
+      const { error } = await sb.from('users').upsert({
+        "id": user.id,
+        "displayName": displayName,
+        "phone": phone,
+        "address": address
+      });
+
+      if (error) throw error;
+      toast.success('Profile updated successfully!');
+    } catch (error: any) {
       console.error('Profile update error:', error);
-      handleFirestoreError(error, OperationType.UPDATE, `users/${user.id}`);
-      toast.error('Failed to update profile');
+      toast.error(`Failed to update profile: ${error?.message || 'Please try again'}`);
     } finally {
       setSaving(false);
     }

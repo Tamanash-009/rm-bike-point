@@ -74,7 +74,6 @@ export default function Booking() {
 
     setLoading(true);
     try {
-      // Calculate next service date if an interval is selected
       let nextServiceDate = null;
       if (formData.serviceInterval !== '0') {
         const currentServiceDate = new Date(formData.date);
@@ -83,20 +82,30 @@ export default function Booking() {
         nextServiceDate = currentServiceDate.toISOString().split('T')[0];
       }
 
-      const bookingData = {
-        ...formData,
-        userId: user.id,
-        userName: user.fullName || 'User',
-        userEmail: user.primaryEmailAddress?.emailAddress,
-        status: 'pending',
-        pointsRedeemed: pointsToRedeem,
-        discountAmount: discountAmount,
-        nextServiceDate,
-        reminderSent: false,
-        createdAt: serverTimestamp()
-      };
+      // Use direct Supabase insert with exact column names from schema
+      const { supabase: sb } = await import('../lib/supabase');
+      const { data: inserted, error } = await sb.from('bookings').insert({
+        "userId": user.id,
+        "userName": user.fullName || user.firstName || 'User',
+        "userEmail": user.primaryEmailAddress?.emailAddress || '',
+        "bikeModel": formData.bikeModel,
+        "serviceType": formData.serviceType,
+        "phone": formData.phone,
+        "date": formData.date,
+        "time": formData.time,
+        "notes": formData.notes || '',
+        "serviceInterval": formData.serviceInterval,
+        "status": 'pending',
+        "pointsRedeemed": pointsToRedeem,
+        "discountAmount": discountAmount,
+        "nextServiceDate": nextServiceDate,
+        "reminderSent": false
+      }).select().single();
 
-      await addDoc(collection(db, 'bookings'), bookingData);
+      if (error) {
+        console.error('Supabase booking error:', error);
+        throw new Error(error.message);
+      }
 
       if (pointsToRedeem > 0) {
         await redeemPoints(user.id, pointsToRedeem, discountAmount, `Service Discount: ${formData.serviceType}`);
@@ -104,9 +113,9 @@ export default function Booking() {
 
       toast.success("Booking submitted successfully!");
       setStep(4);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Booking error:", error);
-      toast.error("Failed to submit booking. Please try again.");
+      toast.error(`Booking failed: ${error?.message || 'Please try again.'}`);
     } finally {
       setLoading(false);
     }

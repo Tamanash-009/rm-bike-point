@@ -53,19 +53,7 @@ app.post("/api/chat", requireAuth(), async (req, res) => {
   }
 
   try {
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Check usage limits in Supabase
-    let { data: usageDoc } = await supabase
-      .from('ai_usage')
-      .select('*')
-      .eq('userId', userId)
-      .eq('date', today)
-      .single();
-
-    if (usageDoc && usageDoc.messageCount >= 2) {
-      return res.json({ reply: "You have reached your daily limit of 2 AI messages. Please try again tomorrow!" });
-    }
+    // No usage limit — open for all authenticated users
 
     const searchProductsTool = {
       functionDeclarations: [
@@ -87,7 +75,7 @@ app.post("/api/chat", requireAuth(), async (req, res) => {
     };
 
     const response = await genAI.models.generateContent({ 
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.0-flash",
       contents: [
         ...(history || []),
         { role: "user", parts: [{ text: message }] }
@@ -95,15 +83,16 @@ app.post("/api/chat", requireAuth(), async (req, res) => {
       tools: [searchProductsTool],
       config: {
         systemInstruction: `
-          You are the official AI Assistant for R.M Bike Point, Kolkata.
+          You are the official AI Assistant for R.M Bike Point, Kolkata — India's premium motorcycle service center.
           You help customers with bike servicing, genuine spare parts, and pre-owned bikes.
           
           Guidelines:
           - If the user asks about product prices or availability, use the 'search_products' tool.
           - When presenting products, format them clearly. If a product is available, follow with the tag [SHOP_NOW:id] where 'id' is the product's document ID.
-          - If you cannot find a specific product, check our services or general categories.
-          - FALLBACK: If you're unsure or cannot help, say: "I couldn't find the exact info. Connect with us directly on WhatsApp." and include the link: https://wa.me/916289328280
-          - Be bold, professional, and energetic.
+          - Answer questions about services: General Service, Engine Tuning, Brake Overhaul, Oil Change, Washing & Polishing, Major Repair.
+          - Location: Jhosser Road, Dighar More, Barasat, Kolkata 700125. Phone: +91 62893 28280.
+          - FALLBACK: If you're unsure, say: "Connect with us on WhatsApp: https://wa.me/916289328280"
+          - Be professional, bold, and energetic. Keep answers concise.
         `,
       }
     });
@@ -132,7 +121,7 @@ app.post("/api/chat", requireAuth(), async (req, res) => {
       }
 
       finalResponse = await genAI.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-2.0-flash",
         contents: [
           ...(history || []),
           { role: "user", parts: [{ text: message }] },
@@ -154,13 +143,6 @@ app.post("/api/chat", requireAuth(), async (req, res) => {
     }
 
     const text = finalResponse.text || "I'm sorry, I couldn't process that. Please try again.";
-
-    // Increment usage count
-    if (usageDoc) {
-      await supabase.from('ai_usage').update({ messageCount: usageDoc.messageCount + 1 }).eq('id', usageDoc.id);
-    } else {
-      await supabase.from('ai_usage').insert([{ userId: userId, date: today, messageCount: 1 }]);
-    }
 
     res.json({ reply: text });
   } catch (error) {

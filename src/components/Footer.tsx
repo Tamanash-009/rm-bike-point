@@ -9,8 +9,12 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="space-y-4">
-            <Link to="/" className="inline-block" aria-label="RM Bike Point Home">
-              <img src="/rm-brand-logo.svg" alt="RM Bike Point" className="h-12 w-auto object-contain" />
+            <Link to="/" className="inline-flex items-center gap-3" aria-label="RM Bike Point Home">
+              <img src="/icon-512.png" alt="RM Bike Point" className="h-12 w-12 rounded-2xl object-cover shadow-lg" />
+              <span className="flex flex-col leading-tight">
+                <span className="text-lg font-black italic tracking-wider text-white uppercase">RM</span>
+                <span className="text-[11px] font-bold tracking-[0.2em] text-[#FF3B30] uppercase">Bike Point</span>
+              </span>
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed">
               Premium motorcycle service and spare parts. We provide top-notch maintenance for all types of bikes, from commuters to superbikes.
