@@ -4,7 +4,7 @@ import { Download, X, Smartphone, Star, Zap } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 
 const STORAGE_KEY = 'rm_install_prompt_dismissed';
-const SHOW_DELAY_MS = 3000; // 3 seconds after login
+const SHOW_DELAY_MS = 500; // 0.5 seconds after login
 
 export default function PWAInstallBanner() {
   const { isInstallable, isInstalled, triggerInstall } = usePWAInstall();
