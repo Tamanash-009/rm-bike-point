@@ -19,6 +19,7 @@ import ProductDetail from './pages/ProductDetail';
 import BikeDetail from './pages/BikeDetail';
 import SplashScreen from './components/SplashScreen';
 import BackgroundEffects from './components/BackgroundEffects';
+import PWAInstallBanner from './components/PWAInstallBanner';
 import { setSupabaseClerkToken, db, setDoc, doc } from './lib/firebase';
 import { useAuth, useUser } from '@clerk/clerk-react';
 
@@ -98,6 +99,7 @@ export default function App() {
           </CustomerLayout>
         } />
       </Routes>
+      <PWAInstallBanner />
     </div>
   );
 }

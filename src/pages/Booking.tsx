@@ -194,8 +194,8 @@ export default function Booking() {
                       onClick={() => setFormData({ ...formData, serviceType: type.id })}
                       className={cn(
                         "p-6 rounded-3xl text-left transition-all border flex items-start space-x-4 group relative overflow-hidden",
-                        formData.serviceType === type.id 
-                          ? "bg-brand-orange border-brand-orange text-white shadow-lg shadow-brand-orange/20" 
+                        formData.serviceType === type.id
+                          ? "bg-brand-orange border-brand-orange text-white shadow-lg shadow-brand-orange/20"
                           : "bg-white/5 border-text-primary/10 text-gray-400 hover:border-brand-orange/50 hover:bg-brand-orange/5"
                       )}
                     >
@@ -212,7 +212,7 @@ export default function Booking() {
                         </div>
                       </div>
                       {formData.serviceType === type.id && (
-                        <motion.div 
+                        <motion.div
                           layoutId="active-service"
                           className="absolute right-4 top-1/2 -translate-y-1/2"
                         >
@@ -270,7 +270,7 @@ export default function Booking() {
             >
               {/* Custom Calendar Integration */}
               <div className="space-y-6">
-                <ServiceCalendar 
+                <ServiceCalendar
                   selectedDate={formData.date}
                   onDateSelect={(date) => setFormData({ ...formData, date })}
                 />
@@ -288,14 +288,14 @@ export default function Booking() {
                       onClick={() => setFormData({ ...formData, time: time })}
                       className={cn(
                         "py-5 px-2 rounded-2xl text-[11px] font-black tracking-widest uppercase transition-all border relative overflow-hidden group",
-                        formData.time === time 
-                          ? "bg-white text-black border-white shadow-xl" 
+                        formData.time === time
+                          ? "bg-white text-black border-white shadow-xl"
                           : "bg-white/5 border-text-primary/5 text-white/40 hover:border-brand-orange/50 hover:bg-brand-orange/5"
                       )}
                     >
                       <span className="relative z-10">{time}</span>
                       {formData.time === time && (
-                        <motion.div 
+                        <motion.div
                           layoutId="active-time"
                           className="absolute inset-0 bg-white"
                         />
@@ -371,7 +371,7 @@ export default function Booking() {
                       <label className="text-xs font-bold text-brand-orange uppercase tracking-widest">Redeem Points</label>
                       <span className="text-xs text-gray-400">{userPoints} pts available</span>
                     </div>
-                    <input 
+                    <input
                       type="range"
                       min="0"
                       max={Math.min(userPoints, 5000)} // Cap redemption at 5000 points (₹500)
