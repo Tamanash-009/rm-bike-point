@@ -156,9 +156,9 @@ export default function AdminSidebar({ isOpen, onClose, activeTab, setActiveTab 
     <>
       <aside 
         className={cn(
-          "fixed inset-y-0 left-0 z-[70] glass border-r border-text-primary/10 flex flex-col transition-all duration-300 ease-in-out",
-          isOpen ? "translate-x-0" : "-translate-x-full",
-          "w-[280px]"
+          "fixed inset-y-0 left-0 z-[70] glass border-r border-text-primary/10 flex flex-col transition-all duration-300 ease-in-out lg:relative",
+          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          isCollapsed ? "lg:w-24" : "w-[280px]"
         )}
         style={{ maxWidth: '80%' }}
       >
@@ -178,11 +178,17 @@ export default function AdminSidebar({ isOpen, onClose, activeTab, setActiveTab 
             </div>
             
             <div className="flex items-center gap-1">
-              {/* Removed collapse button since it is now a drawer */}
+              <button 
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="hidden lg:flex p-2 text-gray-500 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+              >
+                {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+              </button>
               
               <button 
                 onClick={onClose}
-                className="p-2 text-gray-500 hover:text-white"
+                className="lg:hidden p-2 text-gray-500 hover:text-white"
               >
                 <X className="w-6 h-6" />
               </button>
