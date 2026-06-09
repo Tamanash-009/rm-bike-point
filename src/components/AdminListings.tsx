@@ -79,8 +79,18 @@ export default function AdminListings() {
       
       const { getSupabase } = await import('../lib/firebase');
       const sb = await getSupabase();
-      let products = [];
+
+      // Detect schema
+      try {
+        const schemaCheck = await sb.from('products').select('*').limit(1);
+        console.log('Schema detected:', schemaCheck);
+      } catch (err) {
+        console.warn("Could not detect schema prior to upload.", err);
+      }
+
+      let products: any[] = [];
       const seen = new Set();
+      let skippedRows = 0;
       
       for (const row of rawData as any[]) {
         const getVal = (possibleKeys: string[]) => {
@@ -92,40 +102,44 @@ export default function AdminListings() {
           return null;
         };
         
-        const name = getVal(['name', 'product', 'item', 'description']) || 'Unknown Part';
-        if (seen.has(name)) continue;
-        seen.add(name);
-        
+        const name = getVal(['name', 'product', 'item', 'description']);
         const manufacturer = getVal(['brand', 'manufacturer', 'make']) || 'Generic';
         const part_number = getVal(['part', 'number', 'sku']) || `PN-${uuidv4().substring(0,6).toUpperCase()}`;
         const priceStr = getVal(['price', 'mrp', 'rate']) || '0';
         let price = parseFloat(priceStr.toString().replace(/[^\d.]/g, ''));
-        if (isNaN(price)) price = 0;
         
         let quantityStr = getVal(['qty', 'quantity', 'stock']) || '1';
         let quantity = parseInt(quantityStr.toString().replace(/[^\d]/g, ''));
-        if (isNaN(quantity)) quantity = 1;
         
-        const compatible_models = getVal(['compatible', 'model', 'bike']) ? getVal(['compatible', 'model', 'bike']).toString().split(',') : [];
+        const compatible_models = getVal(['compatible', 'model', 'bike']) ? getVal(['compatible', 'model', 'bike']).toString().split(',').map((s: string) => s.trim()) : [];
         
-        const desc = getVal(['desc', 'details']) || `Genuine ${manufacturer} ${name}.`;
-        const full_description = `${desc}
-Part Number: ${part_number}
-Compatible Models: ${compatible_models.join(', ')}
-Year: ${getVal(['year']) || 'Any'}
-BS Stage: ${getVal(['bs', 'stage']) || 'BS6'}`;
+        const desc = getVal(['desc', 'details']) || `Genuine ${manufacturer} ${name || 'Part'}.`;
+        const full_description = `${desc}\nPart Number: ${part_number}\nCompatible Models: ${compatible_models.join(', ')}\nYear: ${getVal(['year']) || 'Any'}\nBS Stage: ${getVal(['bs', 'stage']) || 'BS6'}`;
 
         const imageUrl = 'https://images.unsplash.com/photo-1600661653561-629509216228?w=800&q=80';
 
+        const id = uuidv4();
+
+        // Validation
+        if (!id || typeof id !== 'string') { skippedRows++; continue; }
+        if (!name || typeof name !== 'string') { skippedRows++; continue; }
+        if (isNaN(price) || typeof price !== 'number') { skippedRows++; continue; }
+        if (isNaN(quantity) || typeof quantity !== 'number') { skippedRows++; continue; }
+        if (typeof imageUrl !== 'string') { skippedRows++; continue; }
+        if (!Array.isArray(compatible_models)) { skippedRows++; continue; }
+
+        if (seen.has(name)) { skippedRows++; continue; }
+        seen.add(name);
+
         products.push({
-          id: uuidv4(),
+          id,
           type: 'product',
           name: name,
           price: price,
           category: 'Spare Parts',
           description: full_description,
           imageUrl: imageUrl,
-          images: [imageUrl],
+          images: [imageUrl], // valid string array
           brand: manufacturer,
           stock: quantity,
           bikeModels: compatible_models,
@@ -133,16 +147,40 @@ BS Stage: ${getVal(['bs', 'stage']) || 'BS6'}`;
         });
       }
       
-      toast.loading(`Uploading ${products.length} unique products...`, { id: toastId });
+      toast.loading(`Uploading ${products.length} products... (Skipped ${skippedRows} invalid)`, { id: toastId });
       
       const chunkSize = 50;
+      let totalImported = 0;
+      let failedChunks = 0;
       for (let i = 0; i < products.length; i += chunkSize) {
         const chunk = products.slice(i, i + chunkSize);
-        const { error } = await sb.from('products').upsert(chunk);
-        if (error) throw error;
+        console.log('Uploading chunk', chunk);
+        console.log('Chunk index', i);
+        try {
+          const { error } = await sb
+            .from('products')
+            .upsert(chunk, {
+              onConflict: 'id'
+            });
+            
+          if (error) {
+            console.log('Supabase error', error);
+            throw error;
+          }
+          totalImported += chunk.length;
+        } catch (chunkErr) {
+          failedChunks++;
+          console.error(`Error importing chunk ${i / chunkSize + 1}:`, chunkErr);
+        }
       }
       
-      toast.success(`Successfully imported ${products.length} products!`, { id: toastId });
+      console.log(`Total successfully imported products: ${totalImported}`);
+      
+      if (failedChunks === 0) {
+        toast.success(`Imported ${totalImported} products. Skipped ${skippedRows}. Failed chunks: ${failedChunks}`, { id: toastId });
+      } else {
+        toast.success(`Imported ${totalImported} of ${products.length} products. Failed chunks: ${failedChunks}. Skipped ${skippedRows}.`, { id: toastId });
+      }
     } catch (err: any) {
       console.error(err);
       toast.error(`Import failed: ${err.message}`, { id: toastId });
