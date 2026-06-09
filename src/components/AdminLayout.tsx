@@ -23,7 +23,7 @@ export default function AdminLayout({ children, activeTab, setActiveTab }: Admin
       {/* Sidebar Overlay (Mobile) */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 z-[60] lg:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-black/60 z-[60] transition-opacity duration-300"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -38,8 +38,8 @@ export default function AdminLayout({ children, activeTab, setActiveTab }: Admin
       
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Mobile Header */}
-        <header className="lg:hidden h-16 bg-card-bg border-b border-text-primary/5 flex items-center px-4 shrink-0 z-50">
+        {/* Mobile Header (Now Universal Header) */}
+        <header className="h-16 bg-card-bg border-b border-text-primary/5 flex items-center px-4 shrink-0 z-50">
           <button 
             onClick={() => setIsSidebarOpen(true)}
             className="p-2 text-gray-400 hover:text-white transition-colors"
