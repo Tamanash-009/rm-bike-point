@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, Sun, Moon, Search } from 'lucide-react';
+import { ShoppingCart, Sun, Moon, Search, Menu } from 'lucide-react';
 import { useCartStore } from '../../store/useCartStore';
 import { useTheme } from '../../contexts/ThemeContext';
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from '@clerk/clerk-react';
 import ProfileDropdown from './ProfileDropdown';
 import GlobalSearch from '../GlobalSearch';
+import { useUIStore } from '../../store/useUIStore';
 
 interface DesktopNavbarProps {
   onLogin: () => void;
@@ -14,19 +15,29 @@ interface DesktopNavbarProps {
 export default function DesktopNavbar({ onLogin }: DesktopNavbarProps) {
   const { theme, toggleTheme } = useTheme();
   const cartCount = useCartStore((state) => state.items.reduce((acc, item) => acc + item.quantity, 0));
+  const { toggleDrawer } = useUIStore();
   const location = useLocation();
 
   return (
     <div className="hidden lg:flex items-center justify-between w-full h-20 container-custom">
-      {/* Left: Logo */}
-      <Link to="/" className="flex items-center gap-2 group shrink-0">
-        <div className="w-10 h-10 bg-brand-orange rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(255,92,0,0.3)] group-hover:scale-105 transition-transform">
-          <span className="text-black font-black italic text-xl">R</span>
-        </div>
-        <span className="text-lg font-black tracking-tighter text-white uppercase italic">
-          Bike <span className="text-brand-orange group-hover:glow-orange transition-all duration-300 underline decoration-white/10 underline-offset-4">Point</span>
-        </span>
-      </Link>
+      {/* Left: Logo and Menu */}
+      <div className="flex items-center gap-4 shrink-0">
+        <button 
+          onClick={toggleDrawer}
+          className="p-2.5 rounded-full bg-white/5 text-white/40 hover:text-brand-orange transition-all active:scale-95"
+          aria-label="Toggle Menu"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+        <Link to="/" className="flex items-center gap-2 group shrink-0">
+          <div className="w-10 h-10 bg-brand-orange rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(255,92,0,0.3)] group-hover:scale-105 transition-transform">
+            <span className="text-black font-black italic text-xl">R</span>
+          </div>
+          <span className="text-lg font-black tracking-tighter text-white uppercase italic">
+            Bike <span className="text-brand-orange group-hover:glow-orange transition-all duration-300 underline decoration-white/10 underline-offset-4">Point</span>
+          </span>
+        </Link>
+      </div>
 
       {/* Center: Search Bar */}
       <div className="flex-1 max-w-xl mx-8">
