@@ -17,6 +17,7 @@ export default function DesktopNavbar({ onLogin }: DesktopNavbarProps) {
   const cartCount = useCartStore((state) => state.items.reduce((acc, item) => acc + item.quantity, 0));
   const { toggleDrawer } = useUIStore();
   const location = useLocation();
+  const { user } = useUser();
 
   return (
     <div className="hidden lg:flex items-center justify-between w-full h-20 container-custom">
@@ -61,6 +62,15 @@ export default function DesktopNavbar({ onLogin }: DesktopNavbarProps) {
                <span className={`absolute -bottom-1 left-0 w-full h-0.5 bg-brand-orange transition-all duration-300 origin-left scale-x-0 group-hover:scale-x-100 ${location.pathname === link.href ? 'scale-x-100' : ''}`} />
              </Link>
            ))}
+           {user?.primaryEmailAddress?.emailAddress === "chakrabortytamanash@gmail.com" && (
+             <Link 
+               to="/admin" 
+               className={`text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:text-brand-orange relative group flex items-center gap-2 ${location.pathname.startsWith('/admin') ? 'text-brand-orange' : 'text-brand-orange/80'}`}
+             >
+               CONTROL PANEL
+               <span className={`absolute -bottom-1 left-0 w-full h-0.5 bg-brand-orange transition-all duration-300 origin-left scale-x-0 group-hover:scale-x-100 ${location.pathname.startsWith('/admin') ? 'scale-x-100' : ''}`} />
+             </Link>
+           )}
         </nav>
 
         <div className="flex items-center gap-3">
