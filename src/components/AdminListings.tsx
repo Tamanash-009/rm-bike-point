@@ -77,7 +77,8 @@ export default function AdminListings() {
       const worksheet = workbook.Sheets[sheetName];
       const rawData = xlsx.utils.sheet_to_json(worksheet);
       
-      const { supabase: sb } = await import('../lib/supabase');
+      const { getSupabase } = await import('../lib/firebase');
+      const sb = await getSupabase();
       let products = [];
       const seen = new Set();
       
@@ -114,16 +115,21 @@ Compatible Models: ${compatible_models.join(', ')}
 Year: ${getVal(['year']) || 'Any'}
 BS Stage: ${getVal(['bs', 'stage']) || 'BS6'}`;
 
+        const imageUrl = 'https://images.unsplash.com/photo-1600661653561-629509216228?w=800&q=80';
+
         products.push({
           id: uuidv4(),
+          type: 'product',
           name: name,
           price: price,
           category: 'Spare Parts',
           description: full_description,
-          image_url: 'https://images.unsplash.com/photo-1600661653561-629509216228?w=800&q=80',
+          imageUrl: imageUrl,
+          images: [imageUrl],
           brand: manufacturer,
-          in_stock: quantity > 0,
-          created_at: new Date().toISOString()
+          stock: quantity,
+          bikeModels: compatible_models,
+          status: quantity > 0 ? 'available' : 'out_of_stock'
         });
       }
       
