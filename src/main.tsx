@@ -7,16 +7,19 @@ import App from './App.tsx';
 import './index.css';
 
 // Import your Publishable Key
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+// Use a structurally valid fallback key (base64 clerk.example.com$) so Clerk initializes safely without crashing
+const FALLBACK_KEY = 'pk_test_Y2xlcmsuZXhhbXBsZS5jb20k';
 
 if (!PUBLISHABLE_KEY) {
-  console.error("Missing Publishable Key. Please add VITE_CLERK_PUBLISHABLE_KEY to your .env file.");
+  console.warn("Missing VITE_CLERK_PUBLISHABLE_KEY. Running in preview/demo mode.");
 }
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider>
-      <ThemedClerkProvider publishableKey={PUBLISHABLE_KEY || 'pk_test_placeholder'}>
+      <ThemedClerkProvider publishableKey={PUBLISHABLE_KEY || FALLBACK_KEY}>
         <BrowserRouter>
           <App />
         </BrowserRouter>
